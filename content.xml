@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<content id="ws_1694738243" name="RandomMine" description="Random Mine: Randomized miner logic." author="Language" version="122" date="2021-03-23" save="0" sync="false" lastupdate="1616526076">
+  <dependency version="250"/>
+  <text language="7" name="RandomMine" description="Random Mine: Randomized miner logic." author="Language"/>
+  <text language="33" name="RandomMine" description="Random Mine: Randomized miner logic." author="Language"/>
+  <text language="34" name="RandomMine" description="Random Mine: Randomized miner logic." author="Language"/>
+  <text language="39" name="RandomMine" description="Random Mine: Randomized miner logic." author="Language"/>
+  <text language="44" name="RandomMine" description="Random Mine: Randomized miner logic." author="Language"/>
+  <text language="49" name="RandomMine" description="Random Mine: Randomized miner logic." author="Language"/>
+  <text language="55" name="RandomMine" description="Random Mine: Randomized miner logic." author="Language"/>
+  <text language="81" name="RandomMine" description="Random Mine: Randomized miner logic." author="Language"/>
+  <text language="82" name="RandomMine" description="Random Mine: Randomized miner logic." author="Language"/>
+  <text language="86" name="RandomMine" description="Random Mine: Randomized miner logic." author="Language"/>
+  <text language="88" name="RandomMine" description="Random Mine: Randomized miner logic." author="Language"/>
+</content>
