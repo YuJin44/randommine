@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- RandomSuply Ai, Created by Language. Version 122-->
-<aiscript xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="randommine" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="122">
+<!-- RandomSuply Ai, Created by Language. Version 123-->
+<aiscript xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="randommine" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="123">
   <order id="RandomMine" name="RandomMine" description="Random miner logic." category="mining" infinite="true">
     <params>
       <!-- Define where the trader will base itself -->
@@ -46,7 +46,7 @@
       </param>
       
       <!-- Allowed factions. -->
-      <param name="allowAllFactions" type="bool" default="false" text="Allow all factions" comment="Allow all factions to trade with?"/>
+      <param name="allowAllFactions" type="bool" default="false" text="Allow all friendly factions" comment="Allow all factions to trade with?"/>
       <param name="allowPlayer" type="bool" default="true" text="{20203,101}" comment="Allow this faction?"/>
       <!-- Argon Based Factions -->
       <param name="allowArgon" type="bool" default="true" text="{20203,201}" comment="Allow this faction?"/>
@@ -64,6 +64,11 @@
       <!-- Terran Factions (DLC)-->
       <param name="allowTerran" type="bool" default="true" text="{20203,3001}" comment="Allow this faction?"/>
       <param name="allowPioneers" type="bool" default="true" text="{20203,2901}" comment="Allow this faction?"/>
+      <!-- ToA Factions (DLC)-->
+      <param name="allowLoanshark" type="bool" default="true" text="{20203,3301}" comment="Allow this faction?"/>
+      <param name="allowScavenger" type="bool" default="true" text="{20203,3201}" comment="Allow this faction?"/>
+      <!-- Kingdom End Factions (DLC)-->
+      <param name="allowBoron" type="bool" default="true" text="{20203,1301}" comment="Allow this faction?"/>
       <!-- Pirate Factions -->
       <param name="allowHatikvah" type="bool" default="true" text="{20203,901}" comment="Allow this faction?"/>
       <param name="allowScaleplate" type="bool" default="false" text="{20203,1001}" comment="Allow this faction?"/>
@@ -91,7 +96,7 @@
       <replace string="'('" with="''"/>
       <replace string="')'" with="''"/>
     </substitute_text>
-    <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'Starting Log File Version: 122'" append="false"/>
+    <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'Starting Log File Version: 123'" append="false"/>
     
     <set_order_syncpoint_reached order="this.ship.order"/>
 
@@ -99,16 +104,14 @@
     
     <!--which factions do we allow?-->
     <do_if value="$allowAllFactions">
-      <set_value name="$allowedFactions" exact="[faction.player,faction.argon,faction.antigone,faction.paranid,faction.holyorder,faction.alliance,
-                 faction.teladi,faction.ministry,faction.hatikvah,faction.scaleplate]"/>
-      <do_if value="faction.split">
-        <append_to_list name="$allowedFactions" exact="faction.split"/>
-        <append_to_list name="$allowedFactions" exact="faction.freesplit"/>
-      </do_if>
-      <do_if value="faction.terran">
-        <append_to_list name="$allowedFactions" exact="faction.terran"/>
-        <append_to_list name="$allowedFactions" exact="faction.pioneers"/>
-        <append_to_list name="$allowedFactions" exact="faction.yaki"/>
+      <get_factions_by_relation relation="dock" result="$allowedFactions" faction="faction.player"/>
+      <do_all exact="$allowedFactions.count" counter="$z" reverse="true">
+        <do_if value="$allowedFactions.{$z}.iseconomic and $allowedFactions.{$z}.isactive" negate="true">
+          <remove_value name="$allowedFactions.{$z}"/>
+        </do_if>
+      </do_all>
+      <do_if value="$allowedFactions.indexof.{faction.player}" negate="true">
+        <append_to_list name="$allowedFactions" exact="faction.player"/>
       </do_if>
     </do_if>
     <do_else>
@@ -122,6 +125,12 @@
       <do_if value="$allowAntigone">
         <append_to_list name="$allowedFactions" exact="faction.antigone"/>
       </do_if>
+      <do_if value="$allowTeladi">
+        <append_to_list name="$allowedFactions" exact="faction.teladi"/>
+      </do_if>
+      <do_if value="$allowMinistry">
+        <append_to_list name="$allowedFactions" exact="faction.ministry"/>
+      </do_if>
       <do_if value="$allowParanid">
         <append_to_list name="$allowedFactions" exact="faction.paranid"/>
       </do_if>
@@ -131,29 +140,32 @@
       <do_if value="$allowAlliance">
         <append_to_list name="$allowedFactions" exact="faction.alliance"/>
       </do_if>
-      <do_if value="$allowTeladi">
-        <append_to_list name="$allowedFactions" exact="faction.teladi"/>
+      <do_if value="$allowSplit and @faction.split">
+        <append_to_list name="$allowedFactions" exact="@faction.split"/>
       </do_if>
-      <do_if value="$allowMinistry">
-        <append_to_list name="$allowedFactions" exact="faction.ministry"/>
+      <do_if value="$allowFreeSplit and @faction.freesplit">
+        <append_to_list name="$allowedFactions" exact="@faction.freesplit"/>
+      </do_if>
+      <do_if value="$allowTerran and @faction.terran">
+        <append_to_list name="$allowedFactions" exact="@faction.terran"/>
+      </do_if>
+      <do_if value="$allowPioneers and @faction.pioneers">
+        <append_to_list name="$allowedFactions" exact="@faction.pioneers"/>
+      </do_if>
+      <do_if value="$allowLoanshark and @faction.loanshark">
+        <append_to_list name="$allowedFactions" exact="@faction.loanshark"/>
+      </do_if>
+      <do_if value="$allowScavenger and @faction.scavenger">
+        <append_to_list name="$allowedFactions" exact="@faction.scavenger"/>
+      </do_if>
+      <do_if value="$allowBoron and @faction.boron">
+        <append_to_list name="$allowedFactions" exact="@faction.boron"/>
       </do_if>
       <do_if value="$allowHatikvah">
         <append_to_list name="$allowedFactions" exact="faction.hatikvah"/>
       </do_if>
-      <do_if value="$allowSplit and faction.split">
-        <append_to_list name="$allowedFactions" exact="faction.split"/>
-      </do_if>
-      <do_if value="$allowFreeSplit and faction.freesplit">
-        <append_to_list name="$allowedFactions" exact="faction.freesplit"/>
-      </do_if>
-      <do_if value="$allowTerran and faction.terran">
-        <append_to_list name="$allowedFactions" exact="faction.terran"/>
-      </do_if>
-      <do_if value="$allowPioneers and faction.pioneers">
-        <append_to_list name="$allowedFactions" exact="faction.pioneers"/>
-      </do_if>
-      <do_if value="$allowYaki and faction.yaki">
-        <append_to_list name="$allowedFactions" exact="faction.yaki"/>
+      <do_if value="$allowYaki and @faction.yaki">
+        <append_to_list name="$allowedFactions" exact="@faction.yaki"/>
       </do_if>
       <do_if value="$allowScaleplate">
         <append_to_list name="$allowedFactions" exact="faction.scaleplate"/>
@@ -188,12 +200,12 @@
       <label name="wareLists"/>
       <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'detected presets'"/>
       <do_if value="this.ship.cargo.capacity.solid gt 0 and $listCounter lt 1">
-        <set_value name="$waresToAdd" exact="[ware.ore, ware.silicon, ware.ice, ware.nividium]"/>
+        <set_value name="$waresToAdd" exact="warebasket.all_solid.list"/>
         <set_value name="$listCounter" exact="1"/>
         <resume label="addtoWaresToBasket"/>
       </do_if>
       <do_elseif value="this.ship.cargo.capacity.liquid gt 0 and $listCounter lt 1">
-        <set_value name="$waresToAdd" exact="[ware.helium, ware.methane, ware.hydrogen]"/>
+        <set_value name="$waresToAdd" exact="warebasket.all_liquid.list"/>
         <set_value name="$listCounter" exact="2"/>
         <resume label="addtoWaresToBasket"/>
       </do_elseif>
@@ -253,12 +265,15 @@
           <param name="allowMinistry"      value="$allowMinistry"/>
           <param name="allowParanid"       value="$allowParanid"/>
           <param name="allowHolyOrder"     value="$allowHolyOrder"/>
+          <param name="allowAlliance"      value="$allowAlliance"/>
           <param name="allowSplit"         value="$allowSplit"/>
           <param name="allowFreeSplit"     value="$allowFreeSplit"/>
-          <param name="allowAlliance"      value="$allowAlliance"/>
-          <param name="allowHatikvah"      value="$allowHatikvah"/>
           <param name="allowTerran"        value="$allowTerran"/>
           <param name="allowPioneers"      value="$allowPioneers"/>
+          <param name="allowLoanshark"     value="$allowLoanshark"/>
+          <param name="allowScavenger"     value="$allowScavenger"/>
+          <param name="allowBoron"         value="$allowBoron"/>
+          <param name="allowHatikvah"      value="$allowHatikvah"/>
           <param name="allowScaleplate"    value="$allowScaleplate"/>
           <param name="allowYaki"          value="$allowYaki"/>
           <param name="updateSubordinates" value="$updateSubordinates"/>
@@ -512,7 +527,7 @@
           <set_value name="$sector" exact="$sectors.{$nrs}"/>
           <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'      Scanning '+$sector.knownname"/>
           <find_closest_resource ware="$currentWare" refobject="$sector" position="$position" minamount="750" sector="$dummy">
-            <refposition value="position.[0, 0, 0]"/>
+            <refposition value="$sector.coreposition"/>
           </find_closest_resource>
 
           <do_if value="$position==null">
@@ -520,18 +535,8 @@
             <continue/>
           </do_if>
 
-          <find_object space="$sector" name="$gates" multiple="true" class="[class.gate, class.highwayentrygate, class.highwayexitgate]"/>
-          <set_value name="$x" exact="0.0"/>
-          <set_value name="$z" exact="0.0"/>
-          <do_all exact="$gates.count" counter="$nrg">
-            <set_value name="$gate" exact="$gates.{$nrg}"/>
-            <create_position name="$position" space="$sector" value="$gate.position" object="$gate.zone"/>
-            <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'          gate nr: '+$nrg+', '+$gate.knownname+' '+@$gate.destination.parent.knownname+' '+$position"/>
-            <set_value name="$x" exact="$position.x" operation="add"/>
-            <set_value name="$z" exact="$position.z" operation="add"/>
-          </do_all>
-          <set_value name="$x" exact="$x/($gates.count)f"/>
-          <set_value name="$z" exact="$z/($gates.count)f"/>
+          <set_value name="$x" exact="$sector.coreposition.x"/>
+          <set_value name="$z" exact="$sector.coreposition.z"/>
           <set_value name="$angle" min="0.0" max="6.283"/>
           <set_value name="$radius" min="0.0" max="$sector.size/2"/>
           <set_value name="$position" exact="position.[($x+$radius*cos($angle)), 0, ($z+$radius*sin($angle))]"/>
@@ -590,7 +595,7 @@
         <set_value name="$sector" exact="$sectors.{$nrs}"/>
         <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'  Scanning '+$sector.knownname"/>
         <find_closest_resource ware="$wareBasket" refobject="$sector" position="$position" minamount="750" sector="$dummy">
-          <refposition value="position.[0, 0, 0]"/>
+          <refposition value="$sector.coreposition"/>
         </find_closest_resource>
 
         <do_if value="$position==null">
@@ -598,18 +603,8 @@
           <continue/>
         </do_if>
 
-        <find_object space="$sector" name="$gates" multiple="true" class="[class.gate, class.highwayentrygate, class.highwayexitgate]"/>
-        <set_value name="$x" exact="0.0"/>
-        <set_value name="$z" exact="0.0"/>
-        <do_all exact="$gates.count" counter="$nrg">
-          <set_value name="$gate" exact="$gates.{$nrg}"/>
-          <create_position name="$position" space="$sector" value="$gate.position" object="$gate.zone"/>
-          <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'      gate nr: '+$nrg+', '+$gate.knownname+' '+@$gate.destination.parent.knownname+' '+$position"/>
-          <set_value name="$x" exact="$position.x" operation="add"/>
-          <set_value name="$z" exact="$position.z" operation="add"/>
-        </do_all>
-        <set_value name="$x" exact="$x/($gates.count)f"/>
-        <set_value name="$z" exact="$z/($gates.count)f"/>
+        <set_value name="$x" exact="$sector.coreposition.x"/>
+        <set_value name="$z" exact="$sector.coreposition.z"/>
         <set_value name="$angle" min="0.0" max="6.283"/>
         <set_value name="$radius" min="0.0" max="$sector.size/2"/>
         <set_value name="$position" exact="position.[($x+$radius*cos($angle)), 0, ($z+$radius*sin($angle))]"/>
