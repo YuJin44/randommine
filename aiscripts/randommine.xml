@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- RandomSuply Ai, Created by Language. Version 124-->
-<aiscript xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="randommine" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="124">
+<!-- RandomSuply Ai, Created by Language. Version 125-->
+<aiscript xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="randommine" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="125">
   <order id="RandomMine" name="RandomMine" description="Random miner logic." category="mining" infinite="true">
     <params>
       <!-- Define where the trader will base itself -->
@@ -96,7 +96,7 @@
       <replace string="'('" with="''"/>
       <replace string="')'" with="''"/>
     </substitute_text>
-    <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'Starting Log File Version: 124'" append="false"/>
+    <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'Starting Log File Version: 125'" append="false"/>
     
     <set_order_syncpoint_reached order="this.ship.order"/>
 
@@ -176,7 +176,7 @@
     <set_value name="$pilotSkill" exact="this.ship.pilot.skill.management"/>
     <!--minimum profit and maximum relative price while buying depend on management skill of pilot and profit scale - slider-->
     <set_value name="$maxBuyRelPrice" exact="(-0.325-0.025*($pilotSkill)f)"/>
-    <set_value name="$buyRange" exact=" if $homeBound then $home else this.ship"/>
+    <set_value name="$buyRange" exact=" if $homeBound then (if $home.isclass.sector then $home else $home.sector) else this.sector"/>
     <set_value name="$stepNr" exact="1"/>
 
     <!--initialize fleet inner communication (search interval on idling ships)-->
@@ -468,10 +468,11 @@
       <run_script name="'lib.find.sectors.inrange'" result="$sectors">
         <param name="refobject" value="$buyRange"/>
         <param name="maxgatedistance" value="$maxMine"/>
+        <param name="usesectordistance" value="true"/>
       </run_script>
 
       <remove_value name="$sectors.{$sectors.indexof.{this.sector}}"/>
-      <set_value name="$sectors.{1}" exact="this.sector" operation="insert"/><!--put current sector at first place (highest priority)-->
+      <set_value name="$sectors.{1}" exact="$buyRange" operation="insert"/><!--put current sector at first place (highest priority)-->
       <!--remove hostile sectors-->
       <do_all exact="$sectors.count" counter="$nr" reverse="true">
         <do_if value="$sectors.{$nr}.relationto.{this.ship} lt -0.01">
