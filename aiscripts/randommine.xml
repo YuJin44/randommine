@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- RandomSuply Ai, Created by Language. Version 125-->
-<aiscript xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="randommine" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="125">
+<!-- RandomSuply Ai, Created by Language. Version 126-->
+<aiscript xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="randommine" xsi:noNamespaceSchemaLocation="aiscripts.xsd" version="126">
   <order id="RandomMine" name="RandomMine" description="Random miner logic." category="mining" infinite="true">
     <params>
       <!-- Define where the trader will base itself -->
@@ -96,7 +96,7 @@
       <replace string="'('" with="''"/>
       <replace string="')'" with="''"/>
     </substitute_text>
-    <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'Starting Log File Version: 125'" append="false"/>
+    <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'Starting Log File Version: 126'" append="false"/>
     
     <set_order_syncpoint_reached order="this.ship.order"/>
 
@@ -329,6 +329,12 @@
       ================================================================================================
       ================================================================================================-->
 
+      <!--are we mining for a specific buy offer?-->
+      <do_if value="@this.$randomMineBO">
+        <!--skip "sell from cargo" logic-->
+        <resume label="supply" />
+      </do_if>
+
       <!--do we have wares in cargo already? lets try to sell them-->
       <set_value name="$cargo" exact="this.ship.cargo.list"/>
       <shuffle_list list="$cargo"/>
@@ -436,8 +442,20 @@
 
       <label name="supply"/>
 
-      <!--lets see if we actually have free space in cargo before trying to mine-->
+      <!--lets see if we actually have free space in cargo before trying to mine or is it time to go for the reserved trade?-->
       <do_if value="this.ship.cargo.free.all lt (this.ship.cargo.capacity.all/10)">
+        <do_if value="@this.$randomMineBO">
+          <do_if value="this.$randomMineBO.available">
+            <create_trade_order object="this.ship" tradeoffer="this.$randomMineBO" amount="this.ship.cargo.{this.$randomMineBO.ware}.count"/>
+            <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'      orders created.'"/>
+          </do_if>
+          <do_else>
+            <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'      Buyoffer is not available anymore.'"/>
+          </do_else>
+          <remove_ware_reservation object="this.$randomMineBO.owner" reserver="this.ship"/>
+          <remove_value name="this.$randomMineBO"/>
+          <resume label="finish"/>
+        </do_if>
         <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'  cargo is full =('"/>
         <resume label="noTradesPossible"/>
       </do_if>
@@ -482,7 +500,7 @@
       <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'found '+$sectors.count+' possible sectors for mining.'"/>
 
       <!--are we supplying our stations?-->
-      <do_if value="$supplier" negate="true">
+      <do_if value="not $supplier or @this.$randomMineBO">
         <resume label="freeMiner"/>
       </do_if>
       <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'-starting supply mode-'"/>
@@ -541,7 +559,7 @@
           <set_value name="$x" exact="$sector.coreposition.x"/>
           <set_value name="$z" exact="$sector.coreposition.z"/>
           <set_value name="$angle" min="0.0" max="6.283"/>
-          <set_value name="$radius" min="0.0" max="$sector.size/2"/>
+          <set_value name="$radius" min="0.0" max="$sector.size"/>
           <set_value name="$position" exact="position.[($x+$radius*cos($angle)), 0, ($z+$radius*sin($angle))]"/>
 
           <wait min="1ms" max="100ms" comment="Avoid performance peaks with find functions" />
@@ -563,8 +581,9 @@
               <param name="destination" value="[$sector, $minePosition]"/>
               <param name="ware" value="$currentWare"/>
             </create_order>
-            <create_trade_order object="this.ship" amount="$amount" tradeoffer="$currentBuyOffer"/>
-            <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'      orders created.'"/>
+            <set_value name="this.$randomMineBO" exact="$currentBuyOffer"/>
+            <add_ware_reservation object="$currentBuyOffer.owner" type="sell" reserver="this.ship" ware="$currentWare" amount="$amount"/>
+            <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'      orders created, wares reserved.'"/>
             <resume label="finish"/>
           </do_if>
 
@@ -588,16 +607,18 @@
 
       <!--are we mining for NPCs?-->
       <label name="freeMiner"/>
-      <do_if value="$freeMiner" negate="true">
+      <do_if value="$freeMiner or @this.$randomMineBO" negate="true">
         <resume label="noTradesPossible"/>
       </do_if>
       <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'-starting free mine mode-'"/>
+
+      <set_value name="$mineWares" exact="if @this.$randomMineBO then this.$randomMineBO.ware else $wareBasket"/>
       
       <do_all exact="$sectors.count" counter="$nrs">
         <wait min="1ms" max="100ms" comment="Avoid performance peaks with find functions" />
         <set_value name="$sector" exact="$sectors.{$nrs}"/>
         <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'  Scanning '+$sector.knownname"/>
-        <find_closest_resource ware="$wareBasket" refobject="$sector" position="$position" minamount="750" sector="$dummy">
+        <find_closest_resource ware="$mineWares" refobject="$sector" position="$position" minamount="750" sector="$dummy">
           <refposition value="$sector.coreposition"/>
         </find_closest_resource>
 
@@ -609,11 +630,11 @@
         <set_value name="$x" exact="$sector.coreposition.x"/>
         <set_value name="$z" exact="$sector.coreposition.z"/>
         <set_value name="$angle" min="0.0" max="6.283"/>
-        <set_value name="$radius" min="0.0" max="$sector.size/2"/>
+        <set_value name="$radius" min="0.0" max="$sector.size"/>
         <set_value name="$position" exact="position.[($x+$radius*cos($angle)), 0, ($z+$radius*sin($angle))]"/>
 
         <wait min="1ms" max="100ms" comment="Avoid performance peaks with find functions" />
-        <find_closest_resource ware="$wareBasket" refobject="$sector" position="$minePosition" minamount="750" wares="$wares" sector="$dummy">
+        <find_closest_resource ware="$mineWares" refobject="$sector" position="$minePosition" minamount="750" wares="$wares" sector="$dummy">
           <refposition value="$position"/>
         </find_closest_resource>
         <remove_value name="$position"/>
@@ -628,7 +649,7 @@
                           object="this.ship" text="'going to '+$sector.knownname+' to mine.'"/>
         <create_order object="this.ship" id="'MiningCollect'">
           <param name="destination" value="[$sector, $minePosition]"/>
-          <param name="ware" value="$wares.random"/>
+          <param name="ware" value="if @this.$randomMineBO then this.$randomMineBO.ware else $wares.random"/>
         </create_order>
         <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'  orders created.'"/>
         <resume label="end"/>
