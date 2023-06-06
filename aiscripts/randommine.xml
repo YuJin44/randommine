@@ -330,10 +330,12 @@
       ================================================================================================-->
 
       <!--are we mining for a specific buy offer?-->
-      <do_if value="@this.$randomMineBO">
+      <do_if value="@this.$randomMineBO.available">
         <!--skip "sell from cargo" logic-->
         <resume label="supply" />
       </do_if>
+      <!--if trade gets unavailable we want to forget it to not cause any trouble later on-->
+      <remove_value name="this.$randomMineBO"/>
 
       <!--do we have wares in cargo already? lets try to sell them-->
       <set_value name="$cargo" exact="this.ship.cargo.list"/>
