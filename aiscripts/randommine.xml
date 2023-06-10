@@ -336,6 +336,9 @@
       </do_if>
       <!--if trade gets unavailable we want to forget it to not cause any trouble later on-->
       <remove_value name="this.$randomMineBO"/>
+      <do_if value="@this.$randomMineBOOwner">
+        <remove_ware_reservation object="this.$randomMineBOOwner" reserver="this.ship"/>
+      </do_if>
 
       <!--do we have wares in cargo already? lets try to sell them-->
       <set_value name="$cargo" exact="this.ship.cargo.list"/>
@@ -447,6 +450,7 @@
       <!--lets see if we actually have free space in cargo before trying to mine or is it time to go for the reserved trade?-->
       <do_if value="this.ship.cargo.free.all lt (this.ship.cargo.capacity.all/10)">
         <do_if value="@this.$randomMineBO">
+          <remove_ware_reservation object="this.$randomMineBO.owner" reserver="this.ship"/>
           <do_if value="this.$randomMineBO.available">
             <create_trade_order object="this.ship" tradeoffer="this.$randomMineBO" amount="this.ship.cargo.{this.$randomMineBO.ware}.count"/>
             <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'      orders created.'"/>
@@ -454,7 +458,6 @@
           <do_else>
             <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'      Buyoffer is not available anymore.'"/>
           </do_else>
-          <remove_ware_reservation object="this.$randomMineBO.owner" reserver="this.ship"/>
           <remove_value name="this.$randomMineBO"/>
           <resume label="finish"/>
         </do_if>
@@ -584,6 +587,7 @@
               <param name="ware" value="$currentWare"/>
             </create_order>
             <set_value name="this.$randomMineBO" exact="$currentBuyOffer"/>
+            <set_value name="this.$randomMineBOOwner" exact="$currentBuyOffer.owner"/>
             <add_ware_reservation object="$currentBuyOffer.owner" type="sell" reserver="this.ship" ware="$currentWare" amount="$amount"/>
             <debug_to_file name="$debugFileName" directory="'RandomMine'" text="'      orders created, wares reserved.'"/>
             <resume label="finish"/>
